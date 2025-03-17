@@ -126,4 +126,5 @@ with dlfx.io.XDMFFile(MPI.COMM_WORLD, mesh_name+'.xdmf', 'w') as xdmfout:
     xdmfout.write_meshtags(cell_tags, mesh.geometry) 
     xdmfout.write_meshtags(facet_tags, mesh.geometry) 
 
-# UFL conditionals
+# ufl conditionals
+# ufl spatial coordinates (x,y) ~> use ufl cond. and set pressure.
