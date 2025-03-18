@@ -39,15 +39,14 @@ Emod = 10e9  # E-Modul in [Pa] = [N/m^2]
 nu = 0.325  # Querkontraktionszahl [-]
 rho_ice = 918.0  # Dichte in [kg/m^3]
 g = 9.81  # Erdbeschleunigung in [m/s^2]
-rho_water = 1024.0  # Dichte des Wassers in [kg/m^3]
-p_luft = 101325 # Dichte der  Luft in [N/m^2]
+rho_water = 0.1#1024.0  # Dichte des Wassers in [kg/m^3]
 
 # Berechne Lame-Konstanten (einfacher für Spannungsberechnung)
 lam = dlf.fem.Constant(region, Emod * nu / ((1 - 2 * nu) * (1 + nu)))
 mu = dlf.fem.Constant(region, Emod / (2 * (1 + nu)))
 
 # Volumenlast aus Eigengewicht
-f = dlf.fem.Constant(region, (0, -rho_ice * g + p_luft))
+f = dlf.fem.Constant(region, (0, -rho_ice * g))
 
 
 # Element-Typ (3D Verschiebungselement) und Funktionenraum erzeugen
@@ -105,7 +104,7 @@ uh = dlf.fem.Function(V)
 # Schwache Form des Gleichgewichts; 
 a = ufl.inner(sig(u), eps(du)) * ufl.dx + p*ufl.dot(n,u)*ufl.dot(du,n)*ds(bottom_boundary_tag)
 # Assuming the pressure acts on the x-component (update if needed)
-L = ufl.dot(f, du) * ufl.dx #- ufl.dot(p_front * n, du) * ds(pressure_boundary_tag)
+L = ufl.dot(f, du) * ufl.dx - ufl.dot(p_front * n, du) * ds(pressure_boundary_tag)
 # ds only applies pressure to pressureboundarytag
 
 problem = dlf.fem.petsc.LinearProblem(a, L, bcs, petsc_options={'ksp_type': 'preonly', 'pc_type': 'lu', 'pc_factor_mat_solver_type': 'mumps'})
