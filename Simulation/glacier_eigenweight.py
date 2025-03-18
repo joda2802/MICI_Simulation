@@ -11,8 +11,7 @@ dlf.log.set_log_level(dlf.log.LogLevel.INFO)
 
 # Import mesh
 # input und output Dateien
-filename = 'Mesh_Initial_MICI.xdmf'
-
+filename = 'Mesh/Mesh_Initial_MICI.xdmf'
 
 # Stoppuhr einrichten und starten
 stopwatch = dlf.common.Timer()
@@ -64,15 +63,15 @@ element_tensor = basix.ufl.element('DG', region.topology.cell_name(), 0, shape=(
 T = dlf.fem.functionspace(region, element_tensor)
 
 # Randbedingungen
-buttom_dofs_y = dlf.fem.locate_dofs_topological(V.sub(1), fdim, facet_tags.find(2))
+#buttom_dofs_y = dlf.fem.locate_dofs_topological(V.sub(1), fdim, facet_tags.find(2))
 inflow_dofs_x = dlf.fem.locate_dofs_topological(V.sub(0), fdim, facet_tags.find(5))
 
 
 BC_inflow = dlf.fem.dirichletbc(0.0, inflow_dofs_x, V.sub(0))
-BC_bottom = dlf.fem.dirichletbc(0.0, buttom_dofs_y, V.sub(1))
+#BC_bottom = dlf.fem.dirichletbc(0.0, buttom_dofs_y, V.sub(1))
 
 # Sammeln der Randbedingungen
-bcs = [BC_inflow, BC_bottom]
+bcs = [BC_inflow]#, BC_bottom]
 
 # Convert to a FEniCSx function
 
@@ -82,9 +81,11 @@ p_front = -rho_water * g * ufl.conditional(le(x[1],0),x[1],0)
 
 
 pressure_boundary_tag = 3
-
+bottom_boundary_tag = 2
 # Define the normal vector on the boundary
 n = ufl.FacetNormal(region)
+#boundary condition factor
+p = 1e10
 
 ds = ufl.Measure("ds", subdomain_data=facet_tags)
 
@@ -102,9 +103,9 @@ du = ufl.TestFunction(V)
 uh = dlf.fem.Function(V)
 
 # Schwache Form des Gleichgewichts; 
-a = ufl.inner(sig(u), eps(du)) * ufl.dx
+a = ufl.inner(sig(u), eps(du)) * ufl.dx + p*ufl.dot(n,u)*ufl.dot(du,n)*ds(bottom_boundary_tag)
 # Assuming the pressure acts on the x-component (update if needed)
-L = ufl.dot(f, du) * ufl.dx - ufl.dot(p_front * n, du) * ds(pressure_boundary_tag)
+L = ufl.dot(f, du) * ufl.dx #- ufl.dot(p_front * n, du) * ds(pressure_boundary_tag)
 # ds only applies pressure to pressureboundarytag
 
 problem = dlf.fem.petsc.LinearProblem(a, L, bcs, petsc_options={'ksp_type': 'preonly', 'pc_type': 'lu', 'pc_factor_mat_solver_type': 'mumps'})
@@ -132,3 +133,4 @@ with dlf.io.XDMFFile(region.comm, "output.xdmf", "w") as xdmfout:
     epsilon_tensor.name = "strain ε"
     xdmfout.write_function(epsilon_tensor)
 
+print('done')
