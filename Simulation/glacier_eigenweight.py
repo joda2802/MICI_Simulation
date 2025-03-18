@@ -39,7 +39,7 @@ Emod = 10e9  # E-Modul in [Pa] = [N/m^2]
 nu = 0.325  # Querkontraktionszahl [-]
 rho_ice = 918.0  # Dichte in [kg/m^3]
 g = 9.81  # Erdbeschleunigung in [m/s^2]
-rho_water = 0.1#1024.0  # Dichte des Wassers in [kg/m^3]
+rho_water = 1024.0  # Dichte des Wassers in [kg/m^3]
 
 # Berechne Lame-Konstanten (einfacher für Spannungsberechnung)
 lam = dlf.fem.Constant(region, Emod * nu / ((1 - 2 * nu) * (1 + nu)))
@@ -84,7 +84,7 @@ bottom_boundary_tag = 2
 # Define the normal vector on the boundary
 n = ufl.FacetNormal(region)
 #boundary condition factor
-p = 1e10
+p = 1e12
 
 ds = ufl.Measure("ds", subdomain_data=facet_tags)
 
