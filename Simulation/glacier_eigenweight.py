@@ -11,7 +11,7 @@ dlf.log.set_log_level(dlf.log.LogLevel.INFO)
 
 # Import mesh
 # input und output Dateien
-filename = 'Mesh_Initial_MICI.xdmf'
+filename = 'Mesh/Mesh_Initial_MICI.xdmf'
 
 
 # Stoppuhr einrichten und starten
@@ -131,4 +131,3 @@ with dlf.io.XDMFFile(region.comm, "output.xdmf", "w") as xdmfout:
     xdmfout.write_function(sigma)
     epsilon_tensor.name = "strain ε"
     xdmfout.write_function(epsilon_tensor)
-
