@@ -156,18 +156,18 @@ T = dlf.fem.functionspace(region, element_tensor)
 
 
 def links(x):
-    return x[0] < 100
+    return x[0] < 1000.0
 
 
 # Randbedingungen
 buttom_dofs_y = dlf.fem.locate_dofs_topological(W.sub(0).sub(1), fdim, facet_tags.find(2))
 inflow_dofs_x = dlf.fem.locate_dofs_topological(W.sub(0).sub(0), fdim, facet_tags.find(5))
-inflow_dofs_s = dlf.fem.locate_dofs_topological(W.sub(1), fdim, facet_tags.find(5))
-inflow_cells = dlf.mesh.locate_entities(region, dim, links)
+inflow_cells = dlf.mesh.locate_entities(region, fdim, links)
+inflow_dofs_s = dlf.fem.locate_dofs_topological(W.sub(1), fdim, inflow_cells)
 
 BC_inflow = dlf.fem.dirichletbc(0.0, inflow_dofs_x, W.sub(0).sub(0))
 BC_bottom = dlf.fem.dirichletbc(0.0, buttom_dofs_y, W.sub(0).sub(1))
-BC_inflow_s = dlf.fem.dirichletbc(1.0, inflow_cells, W.sub(1))
+BC_inflow_s = dlf.fem.dirichletbc(1.0, inflow_dofs_s, W.sub(1))
 
 
 
@@ -223,7 +223,7 @@ pot = (degrad(s)*psielP(u)+ psielM(u) + psifrac(s))*ufl.dx
 equi = ufl.derivative(pot, u, du)
 sdrive = ufl.derivative(pot, s, ds)
 rate = (s-sm1)/dt*ds*ufl.dx
-L =  - ufl.dot(p_front * n, du) * ds_bc(pressure_boundary_tag) + ufl.dot(f, du) * ufl.dx
+L =  - ufl.dot(p_front * n, du) * ds_bc(pressure_boundary_tag) + ufl.dot(f*degrad(s), du) * ufl.dx
 res = iMob*rate+sdrive+equi - L
 
 # Nichtlineares Problem und Loeser
