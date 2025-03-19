@@ -11,7 +11,7 @@ dlf.log.set_log_level(dlf.log.LogLevel.INFO)
 
 # Import mesh
 # input und output Dateien
-filename = 'Mesh/Mesh_Initial_MICI.xdmf'
+filename = '../Mesh/Mesh_Initial_MICI.xdmf'
 
 # Stoppuhr einrichten und starten
 stopwatch = dlf.common.Timer()
