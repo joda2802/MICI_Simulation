@@ -51,9 +51,9 @@ dt = dlf.fem.Constant(region, 1e-6)
 
 
 # Eis-Parameter
-Emod = 9e9  # E-Modul in [Pa] = [N/m^2]
+Emod = 1e9  # E-Modul in [Pa] = [N/m^2]
 nu = 0.325  # Querkontraktionszahl [-]
-rho_ice = 0#918.0  # Dichte in [kg/m^3]
+rho_ice = 918.0  # Dichte in [kg/m^3]
 g = 9.81  # Erdbeschleunigung in [m/s^2]
 rho_water = 1024.0  # Dichte des Wassers in [kg/m^3]
 p_luft = 101325 # Dichte der  Luft in [N/m^2]
@@ -76,12 +76,12 @@ hmin = comm.allreduce(np.min(region.h(dim, all_elements)), op=MPI.MIN)
 
 # Phasenfeld-Parameter
 K_Ic = dlf.fem.Constant(region, 95.0e3) # Critical fracture toughness [Pa/m^(1/2)]
-G_c = dlf.fem.Constant(region, (K_Ic.value)**2/Emod*1000)
+G_c = dlf.fem.Constant(region, (K_Ic.value)**2/Emod*10000)
 epsilon = dlf.fem.Constant(region, 3*hmin) # Reguarisierungsparameter
 eta = dlf.fem.Constant(region, 0.001)
 print(G_c.value)
 
-Mob = dlf.fem.Constant(region, 1000.0)
+Mob = dlf.fem.Constant(region, 10.0)
 iMob = dlf.fem.Constant(region, 1.0/Mob.value)
 
 # Define pressure
@@ -311,19 +311,19 @@ while t<tend:
         s.name = 's'
         
         strain_expr = dlf.fem.Expression(eps(u), T.element.interpolation_points())
-        stress_expr = dlf.fem.Expression(stressf(strain,s), T.element.interpolation_points())
+        #stress_expr = dlf.fem.Expression(stressf(eps(u),s), T.element.interpolation_points())
 
         strain.interpolate(strain_expr)
-        stress.interpolate(stress_expr)
+        #stress.interpolate(stress_expr)
         strain.name = 'strain'
-        stress.name = 'stress'
+        #stress.name = 'stress'
 
         # xdmf-Ausgabe fortfuehren
         with dlf.io.XDMFFile(comm, 'output.xdmf', 'a') as xdmfout:
             xdmfout.write_function(u, t)
             xdmfout.write_function(s, t)
             xdmfout.write_function(strain, t)
-            xdmfout.write_function(stress, t)
+            #xdmfout.write_function(stress, t)
 
         
         # update Loesung und Restart-Loesung

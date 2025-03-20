@@ -97,8 +97,8 @@ fine_points = [avg_point] #Liste von Punkten, um die verfeinert werden soll
 #
 """
 fine_lines = [2,3] #Liste von Linien, um die verfeinert werden soll
-dist_min = 400
-dist_max = 600
+dist_min = 800
+dist_max = 1000
 
 
 gmsh.model.mesh.field.add("Distance", 1)
