@@ -2,12 +2,13 @@ import csv
 #creates a 2D-trapezoid shaped mesh 
 #Input Values
 
+L = float(input("Enter Length of Ice:").strip() or "2000")
 H = float(input("Enter Ice Thickness at the Cliff:").strip() or "1000")
 hcliff = float(input("Enter Height above Water:").strip() or "100")
 bed_slope =  float(input("Enter Slope of Bedrock:").strip() or "0")
 ice_slope =  float(input("Enter Slope of Ice Surface:").strip() or "0")
 
-L = 2000
+L = 5000
 
 data = [
     {'id': "1", 'xcoord': 0, 'ycoord': -(H-hcliff)-L*bed_slope},

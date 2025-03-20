@@ -53,7 +53,7 @@ dt = dlf.fem.Constant(region, 1e-6)
 # Eis-Parameter
 Emod = 9e9  # E-Modul in [Pa] = [N/m^2]
 nu = 0.325  # Querkontraktionszahl [-]
-rho_ice = 918.0  # Dichte in [kg/m^3]
+rho_ice = 0#918.0  # Dichte in [kg/m^3]
 g = 9.81  # Erdbeschleunigung in [m/s^2]
 rho_water = 1024.0  # Dichte des Wassers in [kg/m^3]
 p_luft = 101325 # Dichte der  Luft in [N/m^2]
@@ -76,8 +76,8 @@ hmin = comm.allreduce(np.min(region.h(dim, all_elements)), op=MPI.MIN)
 
 # Phasenfeld-Parameter
 K_Ic = dlf.fem.Constant(region, 95.0e3) # Critical fracture toughness [Pa/m^(1/2)]
-G_c = dlf.fem.Constant(region, (K_Ic.value)**2/Emod)
-epsilon = dlf.fem.Constant(region, 10*hmin) # Reguarisierungsparameter
+G_c = dlf.fem.Constant(region, (K_Ic.value)**2/Emod*1000)
+epsilon = dlf.fem.Constant(region, 3*hmin) # Reguarisierungsparameter
 eta = dlf.fem.Constant(region, 0.001)
 print(G_c.value)
 
@@ -156,7 +156,7 @@ T = dlf.fem.functionspace(region, element_tensor)
 
 
 def links(x):
-    return x[0] < 1000.0
+    return x[0] < 0
 
 
 # Randbedingungen
@@ -188,18 +188,26 @@ def positive(val):
 def negative(val):
     return 0.5*(np.abs(val)-val)
 
-# Verzerrungsenergie Zug -> relevant für Rissbildung
-def psielP(u):
+def eps(u):
     eps = ufl.sym(ufl.grad(u))
+    return eps
+
+# Verzerrungsenergie Zug -> relevant für Rissbildung
+def psielP(eps):
     epsD = ufl.dev(eps)
     psiel = 0.5*K*positive(ufl.tr(eps))**2 + mu*ufl.inner(epsD, epsD)
     return psiel
 
 # Verzerrungsenergie Druck
-def psielM(u):
-    eps = ufl.sym(ufl.grad(u))
+def psielM(eps):
     psielM = 0.5*K*negative(ufl.tr(eps))**2
     return psielM
+
+def stressf(eps, s):
+    eps_var = ufl.variable(eps)
+    s_var = ufl.variable(s)
+    str = ufl.diff(degrad(s_var) * psielP(eps_var) + psielM(eps_var), eps_var)
+    
 
 # Bruchenergie
 def psifrac(s):
@@ -211,6 +219,9 @@ w =  dlf.fem.Function(W)
 wm1 =  dlf.fem.Function(W)
 wrestart =  dlf.fem.Function(W)
 dw = ufl.TestFunction(W)
+#strain function
+strain = dlf.fem.Function(T)
+stress = dlf.fem.Function(T)
 
 # Aufspalten in Verschiebung und Bruchfeld
 u, s = ufl.split(w)
@@ -219,7 +230,7 @@ du, ds = ufl.split(dw)
 
 
 # Potential, Gleichgeeicht, Triebkraft, Rate, Residuum
-pot = (degrad(s)*psielP(u)+ psielM(u) + psifrac(s))*ufl.dx
+pot = (degrad(s)*psielP(eps(u))+ psielM(eps(u)) + psifrac(s))*ufl.dx
 equi = ufl.derivative(pot, u, du)
 sdrive = ufl.derivative(pot, s, ds)
 rate = (s-sm1)/dt*ds*ufl.dx
@@ -298,11 +309,22 @@ while t<tend:
         sm1 = wm1.sub(1).collapse()
         u.name = 'u'
         s.name = 's'
+        
+        strain_expr = dlf.fem.Expression(eps(u), T.element.interpolation_points())
+        stress_expr = dlf.fem.Expression(stressf(strain,s), T.element.interpolation_points())
+
+        strain.interpolate(strain_expr)
+        stress.interpolate(stress_expr)
+        strain.name = 'strain'
+        stress.name = 'stress'
 
         # xdmf-Ausgabe fortfuehren
         with dlf.io.XDMFFile(comm, 'output.xdmf', 'a') as xdmfout:
             xdmfout.write_function(u, t)
             xdmfout.write_function(s, t)
+            xdmfout.write_function(strain, t)
+            xdmfout.write_function(stress, t)
+
         
         # update Loesung und Restart-Loesung
         wm1.x.array[Umap] = u.x.array[:]
@@ -318,6 +340,19 @@ while t<tend:
         t = trestart+dt.value
         w.x.array[:] = wrestart.x.array[:]
         w.x.scatter_forward()
+
+    # Tensorraum für stress, strain
+   
+
+    #stress = dlf.fem.Function(T)
+
+    #stress_expr = dlf.fem.Expression(stress(eps(u), s), T.element.interpolation_points())
+    #stress.interpolate(stress_expr)
+    #stress.name = 'stress'
+    
+
+
+   
 
     # Bericht aktuelle Loesung
     if rank == 0:    

@@ -2,10 +2,11 @@ import csv
 #creates a simple rectangular mesh
 #Values for ice thickness and height above water level
 
+L = float(input("Enter Length of Ice:").strip() or "2000")
 H = float(input("Enter Ice Thickness:").strip() or "1000")
 hcliff = float(input("Enter Height above Water:").strip() or "100")
 
-L = 2000
+L = 5000
 
 data = [
     {'id': "1", 'xcoord': 0, 'ycoord': -(H-hcliff)},
