@@ -45,8 +45,8 @@ tend = 1.0
 max_iters = 8
 min_iters = 4
 dt_scale_down = 0.5
-dt_scale_up = 1.0
-dt = dlf.fem.Constant(region, 1e-6)
+dt_scale_up = 2
+dt = dlf.fem.Constant(region, 1e-4)
 
 
 
@@ -207,6 +207,7 @@ def stressf(eps, s):
     eps_var = ufl.variable(eps)
     s_var = ufl.variable(s)
     str = ufl.diff(degrad(s_var) * psielP(eps_var) + psielM(eps_var), eps_var)
+    return str
     
 
 # Bruchenergie
@@ -311,19 +312,19 @@ while t<tend:
         s.name = 's'
         
         strain_expr = dlf.fem.Expression(eps(u), T.element.interpolation_points())
-        #stress_expr = dlf.fem.Expression(stressf(eps(u),s), T.element.interpolation_points())
+        stress_expr = dlf.fem.Expression(stressf(eps(u),s), T.element.interpolation_points())
 
         strain.interpolate(strain_expr)
-        #stress.interpolate(stress_expr)
+        stress.interpolate(stress_expr)
         strain.name = 'strain'
-        #stress.name = 'stress'
+        stress.name = 'stress'
 
         # xdmf-Ausgabe fortfuehren
         with dlf.io.XDMFFile(comm, 'output.xdmf', 'a') as xdmfout:
             xdmfout.write_function(u, t)
             xdmfout.write_function(s, t)
             xdmfout.write_function(strain, t)
-            #xdmfout.write_function(stress, t)
+            xdmfout.write_function(stress, t)
 
         
         # update Loesung und Restart-Loesung
