@@ -46,7 +46,7 @@ max_iters = 8
 min_iters = 4
 dt_scale_down = 0.5
 dt_scale_up = 2
-dt = dlf.fem.Constant(region, 1e-4)
+dt = dlf.fem.Constant(region, 1e-6)
 
 
 

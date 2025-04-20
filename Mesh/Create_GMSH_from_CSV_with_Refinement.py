@@ -19,7 +19,7 @@ Schritt4: Überprüfe in Paraview ob die Tags und das Mesh sinnvoll erstellt wur
 
 '''
 
-mesh_name = "Mesh_Initial_MICI"
+mesh_name = str(input("Name of File"))
 gdim = 2 #Dimension
 
 
